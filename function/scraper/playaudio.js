@@ -3,56 +3,39 @@ const yts = require('yt-search');
 
 async function playaudio(query) {
   return new Promise((resolve, reject) => {
-    try {
-      yts(query)
-        .then((data) => {
-          const url = [];
-          const pormat = data.all;
-          for (let i = 0; i < pormat.length; i++) {
-            if (pormat[i].type === 'video') {
-              let dapet = pormat[i];
-              url.push(dapet.url);
-            }
-          }
-          const id = youtubedl.getVideoID(url[0]);
-          youtubedl.exec(url[0], ['--format', 'bestaudio'], {}, (err, output) => {
-            if (err) {
-              return reject(err);
-            }
+    yts(query)
+      .then(data => {
+        const url = data.all.filter(video => video.type === 'video')[0]?.url;
+        if (!url) {
+          return reject(new Error('Video URL not found'));
+        }
 
-            // Parse the output to find the audio URL
-            const audio = output.find(line => line.startsWith('http'));
-            if (!audio) {
-              return reject(new Error('Audio URL not found'));
+        const options = {
+          quality: 'highest',
+          filter: 'audioonly' // Menambah filter untuk audio saja
+        };
+
+        youtubedl.getInfo(url, options)
+          .then(info => {
+            const audioFormat = info.formats.find(format => format.ext === 'webm' && format.acodec === 'opus'); // Cari ext sesuai codec
+            if (!audioFormat) {
+              return reject(new Error('Audio format not found'));
             }
 
-            youtubedl.getInfo(url[0], (err, info) => {
-              if (err) {
-                return reject(err);
-              }
+            const result = {
+              title: info.title,
+              thumb: info.thumbnail,
+              channel: info.uploader,
+              published: info.upload_date,
+              views: info.view_count,
+              url: audioFormat.url
+            };
 
-              const title = info.title;
-              const thumb = info.thumbnail;
-              const channel = info.uploader;
-              const views = info.view_count;
-              const published = info.upload_date;
-
-              const result = {
-                title: title,
-                thumb: thumb,
-                channel: channel,
-                published: published,
-                views: views,
-                url: audio
-              };
-              resolve(result);
-            });
-          });
-        })
-        .catch(reject);
-    } catch (error) {
-      reject(error);
-    }
+            resolve(result);
+          })
+          .catch(reject);
+      })
+      .catch(reject);
   });
 }
 
