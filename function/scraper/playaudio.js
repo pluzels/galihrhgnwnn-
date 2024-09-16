@@ -1,47 +1,251 @@
-const ytdl = require('@distube/ytdl-core');
+const yt = require('ytdl-core');
 const yts = require('yt-search');
 
-async function playaudio(query) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // mencari video berdasarkan query
-            const searchResults = await yts(query);
-            const videos = searchResults.videos;
-
-            if (videos.length === 0) {
-                return reject(new Error('Video tidak ditemukan'));
-            }
-
-            // mendapatkan URL video pertama dari hasil pencarian
-            const videoUrl = videos[0].url;
-
-            // mengambil info video
-            const videoInfo = await ytdl.getInfo(videoUrl);
-
-            // mendapatkan format audio (audio/webm; codecs="opus")
-            const audioFormats = videoInfo.formats.filter(format => format.mimeType === 'audio/webm; codecs="opus"');
-            if (audioFormats.length === 0) {
-                return reject(new Error('Format audio tidak ditemukan'));
-            }
-
-            // ambil URL audio
-            const audioUrl = audioFormats[0].url;
-
-            // informasi lainnya
-            const result = {
-                title: videoInfo.videoDetails.title,
-                thumb: videoInfo.videoDetails.thumbnails[0].url,
-                channel: videoInfo.videoDetails.author.name,
-                published: videoInfo.videoDetails.publishDate,
-                views: videoInfo.videoDetails.viewCount,
-                url: audioUrl
-            };
-
-            resolve(result);
-        } catch (error) {
-            reject(error);
+async function audio(url) {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = yt.getVideoID(url)
+      const yutub = yt.getInfo(`https://www.youtube.com/watch?v=${id}`)
+      .then((data) => {
+        let pormat = data.formats
+        let audio = []
+        for (let i = 0; i < pormat.length; i++) {
+          if (pormat[i].mimeType == 'audio/webm; codecs=\"opus\"') {
+            let aud = pormat[i]
+            audio.push(aud.url)
+          }
         }
-    });
+        const title = data.player_response.microformat.playerMicroformatRenderer.title.simpleText
+        const thumb = data.player_response.microformat.playerMicroformatRenderer.thumbnail.thumbnails[0].url
+        const channel = data.player_response.microformat.playerMicroformatRenderer.ownerChannelName
+        const views = data.player_response.microformat.playerMicroformatRenderer.viewCount
+        const published = data.player_response.microformat.playerMicroformatRenderer.publishDate
+        
+        const result = {
+          title: title,
+          thumb: thumb,
+          channel: channel,
+          published: published,
+          views: views,
+          url: audio[0]
+        }
+        return(result)
+      })
+      resolve(yutub)
+    } catch (error) {
+        reject(error);
+      }
+      console.log(error)
+  })
 }
 
-module.exports = playaudio;
+async function video(url) {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = yt.getVideoID(url)
+      const yutub = yt.getInfo(`https://www.youtube.com/watch?v=${id}`)
+      .then((data) => {
+        let pormat = data.formats
+        let video = []
+        for (let i = 0; i < pormat.length; i++) {
+          if (pormat[i].container == 'mp4' && pormat[i].hasVideo == true && pormat[i].hasAudio == true) {
+            let vid = pormat[i]
+            video.push(vid.url)
+          }
+        }
+        const title = data.player_response.microformat.playerMicroformatRenderer.title.simpleText
+        const thumb = data.player_response.microformat.playerMicroformatRenderer.thumbnail.thumbnails[0].url
+        const channel = data.player_response.microformat.playerMicroformatRenderer.ownerChannelName
+        const views = data.player_response.microformat.playerMicroformatRenderer.viewCount
+        const published = data.player_response.microformat.playerMicroformatRenderer.publishDate
+        
+        const result = {
+          title: title,
+          thumb: thumb,
+          channel: channel,
+          published: published,
+          views: views,
+          url: video[0]
+        }
+        return(result)
+      })
+      resolve(yutub)
+    } catch (error) {
+        reject(error);
+      }
+      console.log(error)
+  })
+}
+
+async function play(query) {
+    return new Promise((resolve, reject) => {
+        try {
+            const search = yts(query)
+            .then((data) => {
+                const url = []
+                const pormat = data.all
+                for (let i = 0; i < pormat.length; i++) {
+                    if (pormat[i].type == 'video') {
+                        let dapet = pormat[i]
+                        url.push(dapet.url)
+                    }
+                }
+                const id = yt.getVideoID(url[0])
+                const yutub = yt.getInfo(`https://www.youtube.com/watch?v=${id}`)
+                .then((data) => {
+                    let pormat = data.formats
+                    let audio = []
+                    let video = []
+                    for (let i = 0; i < pormat.length; i++) {
+                    if (pormat[i].mimeType == 'audio/webm; codecs=\"opus\"') {
+                        let aud = pormat[i]
+                        audio.push(aud.url)
+                    }
+                    }
+                    const title = data.player_response.microformat.playerMicroformatRenderer.title.simpleText
+                    const thumb = data.player_response.microformat.playerMicroformatRenderer.thumbnail.thumbnails[0].url
+                    const channel = data.player_response.microformat.playerMicroformatRenderer.ownerChannelName
+                    const views = data.player_response.microformat.playerMicroformatRenderer.viewCount
+                    const published = data.player_response.microformat.playerMicroformatRenderer.publishDate
+                    const result = {
+                    title: title,
+                    thumb: thumb,
+                    channel: channel,
+                    published: published,
+                    views: views,
+                    url: audio[0]
+                    }
+                    return(result)
+                })
+                return(yutub)
+            })
+            resolve(search)
+        } catch (error) {
+            reject(error)
+        }
+        console.log(error)
+    })
+}
+
+async function playaudio(query) {
+    return new Promise((resolve, reject) => {
+        try {
+            const search = yts(query)
+            .then((data) => {
+                const url = []
+                const pormat = data.all
+                for (let i = 0; i < pormat.length; i++) {
+                    if (pormat[i].type == 'video') {
+                        let dapet = pormat[i]
+                        url.push(dapet.url)
+                    }
+                }
+                const id = yt.getVideoID(url[0])
+                const yutub = yt.getInfo(`https://www.youtube.com/watch?v=${id}`)
+                .then((data) => {
+                    let pormat = data.formats
+                    let audio = []
+                    let video = []
+                    for (let i = 0; i < pormat.length; i++) {
+                    if (pormat[i].mimeType == 'audio/webm; codecs=\"opus\"') {
+                        let aud = pormat[i]
+                        audio.push(aud.url)
+                    }
+                    }
+                    const title = data.player_response.microformat.playerMicroformatRenderer.title.simpleText
+                    const thumb = data.player_response.microformat.playerMicroformatRenderer.thumbnail.thumbnails[0].url
+                    const channel = data.player_response.microformat.playerMicroformatRenderer.ownerChannelName
+                    const views = data.player_response.microformat.playerMicroformatRenderer.viewCount
+                    const published = data.player_response.microformat.playerMicroformatRenderer.publishDate
+                    const result = {
+                    title: title,
+                    thumb: thumb,
+                    channel: channel,
+                    published: published,
+                    views: views,
+                    url: audio[0]
+                    }
+                    return(result)
+                })
+                return(yutub)
+            })
+            resolve(search)
+        } catch (error) {
+            reject(error)
+        }
+        console.log(error)
+    })
+}
+
+async function playvideo(query) {
+    return new Promise((resolve, reject) => {
+        try {
+            const search = yts(query)
+            .then((data) => {
+                const url = []
+                const pormat = data.all
+                for (let i = 0; i < pormat.length; i++) {
+                    if (pormat[i].type == 'video') {
+                        let dapet = pormat[i]
+                        url.push(dapet.url)
+                    }
+                }
+                const id = yt.getVideoID(url[0])
+                const yutub = yt.getInfo(`https://www.youtube.com/watch?v=${id}`)
+                .then((data) => {
+                    let pormat = data.formats
+                    let video = []
+                    for (let i = 0; i < pormat.length; i++) {
+                    if (pormat[i].container == 'mp4' && pormat[i].hasVideo == true && pormat[i].hasAudio == true) {
+                        let vid = pormat[i]
+                        video.push(vid.url)
+                    }
+                   }
+                    const title = data.player_response.microformat.playerMicroformatRenderer.title.simpleText
+                    const thumb = data.player_response.microformat.playerMicroformatRenderer.thumbnail.thumbnails[0].url
+                    const channel = data.player_response.microformat.playerMicroformatRenderer.ownerChannelName
+                    const views = data.player_response.microformat.playerMicroformatRenderer.viewCount
+                    const published = data.player_response.microformat.playerMicroformatRenderer.publishDate
+                    const result = {
+                    title: title,
+                    thumb: thumb,
+                    channel: channel,
+                    published: published,
+                    views: views,
+                    url: video[0]
+                    }
+                    return(result)
+                })
+                return(yutub)
+            })
+            resolve(search)
+        } catch (error) {
+            reject(error)
+        }
+        console.log(error)
+    })
+}
+
+async function search(query) {
+    return new Promise((resolve, reject) => {
+        try {
+            const cari = yts(query)
+            .then((data) => {
+                res = data.all
+                return res
+            })
+            resolve(cari)
+        } catch (error) {
+            reject(error)
+        }
+        console.log(error)
+    })
+}
+
+module.exports = {
+	audio,
+	video,
+	play,
+	playaudio,
+	playvideo
+                        }
