@@ -1,4 +1,4 @@
-const ytdl = require('@distube/ytdl-core');
+const youtubedl = require('youtubedl-core');
 const yts = require('yt-search');
 
 async function playaudio(query) {
@@ -14,33 +14,40 @@ async function playaudio(query) {
               url.push(dapet.url);
             }
           }
-          const id = ytdl.getVideoID(url[0]);
-          ytdl.getInfo(`https://www.youtube.com/watch?v=${id}`)
-            .then((data) => {
-              let pormat = data.formats;
-              let audio = [];
-              for (let i = 0; i < pormat.length; i++) {
-                if (pormat[i].mimeType === 'audio/webm; codecs="opus"') {
-                  let aud = pormat[i];
-                  audio.push(aud.url);
-                }
+          const id = youtubedl.getVideoID(url[0]);
+          youtubedl.exec(url[0], ['--format', 'bestaudio'], {}, (err, output) => {
+            if (err) {
+              return reject(err);
+            }
+
+            // Parse the output to find the audio URL
+            const audio = output.find(line => line.startsWith('http'));
+            if (!audio) {
+              return reject(new Error('Audio URL not found'));
+            }
+
+            youtubedl.getInfo(url[0], (err, info) => {
+              if (err) {
+                return reject(err);
               }
-              const title = data.player_response.microformat.playerMicroformatRenderer.title.simpleText;
-              const thumb = data.player_response.microformat.playerMicroformatRenderer.thumbnail.thumbnails[0].url;
-              const channel = data.player_response.microformat.playerMicroformatRenderer.ownerChannelName;
-              const views = data.player_response.microformat.playerMicroformatRenderer.viewCount;
-              const published = data.player_response.microformat.playerMicroformatRenderer.publishDate;
+
+              const title = info.title;
+              const thumb = info.thumbnail;
+              const channel = info.uploader;
+              const views = info.view_count;
+              const published = info.upload_date;
+
               const result = {
                 title: title,
                 thumb: thumb,
                 channel: channel,
                 published: published,
                 views: views,
-                url: audio[0]
+                url: audio
               };
               resolve(result);
-            })
-            .catch(reject);
+            });
+          });
         })
         .catch(reject);
     } catch (error) {
