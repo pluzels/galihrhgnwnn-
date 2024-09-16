@@ -114,7 +114,7 @@ app.get("/api/blackboxAIChat", async (req, res) => {
   }
 });
 
-app.get("/api/playaudio", async (req, res) => {
+app.get('/api/playaudio', async (req, res) => {
   try {
     const { query } = req.query;
     if (!query) {
@@ -126,7 +126,7 @@ app.get("/api/playaudio", async (req, res) => {
 
     res.status(200).json({
       status: 200,
-      creator: "siputzx",
+      creator: 'galihrhgnwn',
       data: audioData,
     });
   } catch (error) {
