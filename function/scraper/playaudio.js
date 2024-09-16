@@ -50,6 +50,4 @@ async function playaudio(query) {
     });
 }
 
-module.exports = {
-    playaudio
-};
+module.exports = playaudio;
