@@ -114,15 +114,15 @@ app.get("/api/blackboxAIChat", async (req, res) => {
   }
 });
 
-app.get('/api/playaudio', async (req, res) => {
+app.get('/api/ytaudiodl', async (req, res) => {
   try {
-    const { query } = req.query;
-    if (!query) {
-      return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
+    const { link } = req.query;
+    if (!link) {
+      return res.status(400).json({ error: 'Parameter "link" tidak ditemukan' });
     }
 
-    // panggil fungsi playaudio
-    const audioData = await ptz.playaudio(query);
+    // Panggil fungsi ytaudiodl dengan URL langsung
+    const audioData = await ptz.ytaudiodl(link);
 
     res.status(200).json({
       status: 200,
