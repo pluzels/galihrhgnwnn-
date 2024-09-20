@@ -60,6 +60,27 @@ app.get("/api/ragbot", async (req, res) => {
   }
 });
 
+app.get('/api/playaudio', async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
+    }
+
+    // Panggil fungsi playaudio dengan query
+    const audioData = await ptz.playaudio(query);
+
+    res.status(200).json({
+      status: 200,
+      creator: 'galihrhgnwn',
+      data: audioData,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Endpoint untuk degreeGuru
 app.get("/api/degreeguru", async (req, res) => {
   try {
