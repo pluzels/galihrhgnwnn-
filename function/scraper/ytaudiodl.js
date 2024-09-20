@@ -5,21 +5,23 @@ async function ytsearch(query) {
     // Menggunakan yt-search untuk melakukan pencarian berdasarkan query
     yts(query)
       .then(data => {
-        const video = data.videos[0]; // Ambil video pertama dari hasil pencarian
-        if (!video) {
-          return reject(new Error('Video not found'));
+        const videos = data.videos.slice(0, 10); // Ambil 10 hasil pertama dari pencarian
+
+        if (videos.length === 0) {
+          return reject(new Error('No videos found'));
         }
 
-        const result = {
+        // Format setiap hasil video
+        const results = videos.map(video => ({
           title: video.title,
           thumb: video.thumbnail,
           channel: video.author.name,
           published: video.ago,
           views: video.views,
           url: video.url // URL video
-        };
+        }));
 
-        resolve(result); // Kembalikan hasilnya
+        resolve(results); // Kembalikan array dengan 10 hasil video
       })
       .catch(reject); // Tangani kesalahan jika ada
   });
