@@ -1,27 +1,33 @@
-const yts = require('yt-search'); // yt-search untuk mencari video
-const ytdl = require('@distube/ytdl-core'); // @distube/ytdl-core untuk mengambil data audio
+const yts = require('yt-search');
+const ytdl = require('@distube/ytdl-core');
 
 async function playaudio(query) {
   return new Promise((resolve, reject) => {
     try {
-      // Cari video menggunakan yt-search
       yts(query).then(data => {
-        const video = data.videos[0]; // Ambil video pertama dari hasil pencarian
+        const video = data.videos[0];
         if (!video) {
           return reject(new Error('Video not found'));
         }
 
         const videoUrl = video.url;
 
-        // Menggunakan @distube/ytdl-core untuk mendapatkan info audio
-        ytdl.getInfo(videoUrl).then(info => {
-          const audioFormats = info.formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm')); // Filter audio format
+        // Menggunakan ytdl-core dengan User-Agent
+        const options = {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+          }
+        };
+
+        ytdl(videoUrl, options).then(info => {
+          const formats = info.formats;
+          const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm'));
 
           if (!audioFormats.length) {
             return reject(new Error('No audio formats found'));
           }
 
-          const bestAudio = audioFormats[0]; // Ambil format audio terbaik
+          const bestAudio = audioFormats[0];
 
           const result = {
             title: video.title,
@@ -29,14 +35,14 @@ async function playaudio(query) {
             channel: video.author.name,
             published: video.ago,
             views: video.views,
-            url: bestAudio.url // URL audio
+            url: bestAudio.url
           };
 
-          resolve(result); // Kembalikan hasilnya
-        }).catch(reject); // Tangani kesalahan saat mengambil info dengan @distube/ytdl-core
-      }).catch(reject); // Tangani kesalahan saat pencarian dengan yt-search
+          resolve(result);
+        }).catch(reject);
+      }).catch(reject);
     } catch (error) {
-      reject(error); // Tangani kesalahan lainnya
+      reject(error);
     }
   });
 }
