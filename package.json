@@ -12,7 +12,7 @@
   "dependencies": {
     "@types/node": "^18.0.6",
     "axios": "^1.6.8",
-    "youtubedl-core": "^4.11.7",
+    "@distube/ytdl-core": "^4.14.4",
     "yt-search": "^2.12.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
