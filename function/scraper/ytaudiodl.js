@@ -1,27 +1,22 @@
-const youtubedl = require('youtubedl-core');
+const yts = require('yt-search');
 
-async function ytaudiodl(link) {
+async function ytsearch(query) {
   return new Promise((resolve, reject) => {
-    const options = {
-      quality: 'highest',
-      filter: 'audioonly' // Hanya ambil audio
-    };
-
-    // Menggunakan youtubedl-core untuk mengambil info audio
-    youtubedl.getInfo(link, options)
-      .then(info => {
-        const audioFormat = info.formats.find(format => format.ext === 'webm' && format.acodec === 'opus'); // Cari format audio
-        if (!audioFormat) {
-          return reject(new Error('Audio format not found'));
+    // Menggunakan yt-search untuk melakukan pencarian berdasarkan query
+    yts(query)
+      .then(data => {
+        const video = data.videos[0]; // Ambil video pertama dari hasil pencarian
+        if (!video) {
+          return reject(new Error('Video not found'));
         }
 
         const result = {
-          title: info.title,
-          thumb: info.thumbnail,
-          channel: info.uploader,
-          published: info.upload_date,
-          views: info.view_count,
-          url: audioFormat.url // URL audio
+          title: video.title,
+          thumb: video.thumbnail,
+          channel: video.author.name,
+          published: video.ago,
+          views: video.views,
+          url: video.url // URL video
         };
 
         resolve(result); // Kembalikan hasilnya
@@ -30,4 +25,4 @@ async function ytaudiodl(link) {
   });
 }
 
-module.exports = ytaudiodl;
+module.exports = ytsearch;
