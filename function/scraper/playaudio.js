@@ -19,27 +19,21 @@ async function playaudio(query) {
           }
         };
 
-        ytdl(videoUrl, options).then(info => {
-          const formats = info.formats;
-          const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm'));
+        // Mengambil info audio
+        const audioStream = ytdl(videoUrl, options);
+        
+        const audioFormats = audioStream; // Stream audio
 
-          if (!audioFormats.length) {
-            return reject(new Error('No audio formats found'));
-          }
+        const result = {
+          title: video.title,
+          thumb: video.thumbnail,
+          channel: video.author.name,
+          published: video.ago,
+          views: video.views,
+          url: videoUrl // URL video (bisa di-stream)
+        };
 
-          const bestAudio = audioFormats[0];
-
-          const result = {
-            title: video.title,
-            thumb: video.thumbnail,
-            channel: video.author.name,
-            published: video.ago,
-            views: video.views,
-            url: bestAudio.url
-          };
-
-          resolve(result);
-        }).catch(reject);
+        resolve(result);
       }).catch(reject);
     } catch (error) {
       reject(error);
