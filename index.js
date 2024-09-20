@@ -114,20 +114,20 @@ app.get("/api/blackboxAIChat", async (req, res) => {
   }
 });
 
-app.get('/api/ytaudiodl', async (req, res) => {
+app.get('/api/ytsearch', async (req, res) => {
   try {
-    const { link } = req.query;
-    if (!link) {
-      return res.status(400).json({ error: 'Parameter "link" tidak ditemukan' });
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
     }
 
-    // Panggil fungsi ytaudiodl dengan URL langsung
-    const audioData = await ptz.ytaudiodl(link);
+    // Panggil fungsi ytsearch dengan query pencarian
+    const searchResults = await ptz.ytsearch(query);
 
     res.status(200).json({
       status: 200,
       creator: 'galihrhgnwn',
-      data: audioData,
+      data: searchResults,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
