@@ -4,32 +4,24 @@ const ytdl = require('@distube/ytdl-core');
 async function playaudio(query) {
   return new Promise((resolve, reject) => {
     try {
-      yts(query).then(async data => {
-        const video = data.videos[0];
+      // Cari video menggunakan yt-search
+      yts(query).then(data => {
+        const video = data.videos[0]; // Ambil video pertama dari hasil pencarian
         if (!video) {
           return reject(new Error('Video not found'));
         }
 
         const videoUrl = video.url;
 
-        // Menggunakan ytdl-core dengan User-Agent
+        // Menggunakan ytdl-core untuk mendapatkan info audio
         const options = {
-          requestOptions: {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
-            }
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
           }
         };
 
-        const info = await ytdl.getInfo(videoUrl, options);
-        const formats = info.formats;
-        const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm'));
-
-        if (!audioFormats.length) {
-          return reject(new Error('No audio formats found'));
-        }
-
-        const bestAudio = audioFormats[0];
+        // Streaming audio
+        const audioStream = ytdl(videoUrl, options);
 
         const result = {
           title: video.title,
@@ -37,7 +29,7 @@ async function playaudio(query) {
           channel: video.author.name,
           published: video.ago,
           views: video.views,
-          url: bestAudio.url
+          url: audioStream // Stream audio langsung
         };
 
         resolve(result);
