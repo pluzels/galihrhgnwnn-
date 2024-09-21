@@ -13,14 +13,13 @@ async function playaudio(query) {
 
         const videoUrl = video.url;
 
-        // Menggunakan ytdl-core untuk mendapatkan info audio
+        // Streaming audio
         const options = {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
           }
         };
 
-        // Streaming audio
         const audioStream = ytdl(videoUrl, options);
 
         const result = {
@@ -29,7 +28,7 @@ async function playaudio(query) {
           channel: video.author.name,
           published: video.ago,
           views: video.views,
-          url: audioStream // Stream audio langsung
+          streamUrl: audioStream // Stream audio langsung
         };
 
         resolve(result);
@@ -40,4 +39,4 @@ async function playaudio(query) {
   });
 }
 
-module.exports = playaudio;
+module.exports = playaudio; // Ekspor fungsi playaudio
