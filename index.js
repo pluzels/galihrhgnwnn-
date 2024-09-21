@@ -134,6 +134,7 @@ app.get('/api/ytsearch', async (req, res) => {
   }
 });
 
+// Endpoint untuk playMusic
 app.get("/api/playmusic", async (req, res) => {
   try {
     const { query } = req.query;
@@ -141,7 +142,7 @@ app.get("/api/playmusic", async (req, res) => {
       return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
     }
 
-    const result = await playMusic(query);
+    const result = await ptz.playMusic(query); // Pastikan fungsi playMusic ada
     res.status(200).json({
       status: 200,
       creator: "galihrhgnwn",
