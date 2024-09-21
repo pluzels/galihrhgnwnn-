@@ -13,8 +13,17 @@ async function playaudio(query) {
 
         const videoUrl = video.url;
 
-        // Menggunakan ytdl-core untuk mendapatkan info audio
-        ytdl.getInfo(videoUrl).then(info => {
+        // Menggunakan ytdl-core dengan User-Agent
+        const options = {
+          requestOptions: {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, seperti Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            }
+          }
+        };
+
+        // Mengambil info audio
+        ytdl.getInfo(videoUrl, options).then(info => {
           const formats = info.formats;
           const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm')); // Filter audio format
 
