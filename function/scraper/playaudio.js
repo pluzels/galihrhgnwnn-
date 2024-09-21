@@ -1,26 +1,35 @@
-const yts = require('yt-search'); // yt-search untuk mencari video
-const { ytdl } = require('@distube/ytdl-core'); // ytdl-core untuk mengambil data audio
+const yts = require('yt-search');
+const ytdl = require('@distube/ytdl-core');
 
 async function playaudio(query) {
   return new Promise((resolve, reject) => {
-    yts(query).then(data => {
-      const video = data.videos[0]; // Ambil video pertama dari hasil pencarian
-      if (!video) {
-        return reject(new Error('Video not found'));
-      }
+    try {
+      yts(query).then(async data => {
+        const video = data.videos[0];
+        if (!video) {
+          return reject(new Error('Video not found'));
+        }
 
-      const videoUrl = video.url;
+        const videoUrl = video.url;
 
-      // Menggunakan ytdl-core untuk mendapatkan info audio
-      ytdl.getInfo(videoUrl).then(info => {
+        // Menggunakan ytdl-core dengan User-Agent
+        const options = {
+          requestOptions: {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
+            }
+          }
+        };
+
+        const info = await ytdl.getInfo(videoUrl, options);
         const formats = info.formats;
-        const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm')); // Filter audio format
+        const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm'));
 
         if (!audioFormats.length) {
           return reject(new Error('No audio formats found'));
         }
 
-        const bestAudio = audioFormats[0]; // Ambil format audio terbaik
+        const bestAudio = audioFormats[0];
 
         const result = {
           title: video.title,
@@ -28,12 +37,14 @@ async function playaudio(query) {
           channel: video.author.name,
           published: video.ago,
           views: video.views,
-          url: bestAudio.url // URL audio
+          url: bestAudio.url
         };
 
-        resolve(result); // Kembalikan hasilnya
+        resolve(result);
       }).catch(reject);
-    }).catch(reject);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
