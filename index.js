@@ -67,16 +67,12 @@ app.get('/api/playaudio', async (req, res) => {
       return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
     }
 
-    // Panggil fungsi playaudio
-    const audioData = await playaudio(query);
+    const audioData = await playaudio(query); // panggil fungsi playaudio
 
     res.status(200).json({
       status: 200,
       creator: 'galihrhgnwn',
-      title: audioData.title,
-      channel: audioData.channel,
-      views: audioData.views,
-      streamUrl: audioData.url, // URL stream audio
+      data: audioData,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
