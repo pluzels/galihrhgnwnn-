@@ -134,6 +134,24 @@ app.get('/api/ytsearch', async (req, res) => {
   }
 });
 
+app.get("/api/playmusic", async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
+    }
+
+    const result = await playMusic(query);
+    res.status(200).json({
+      status: 200,
+      creator: "galihrhgnwn",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/gpt", async (req, res) => {
   const text = req.query.text;
 
