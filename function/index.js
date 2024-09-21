@@ -1,6 +1,6 @@
 module.exports = {
     ytsearch: require('./scraper/ytsearch'),
-    playaudio: require('./scraper/playaudio'),
+    playMusic: require('./scraper/playMusic'),
     blackboxAIChat: require('./scraper/blackboxAIChat'),
     smartContract: require('./scraper/smartContract'),
     ragBot: require('./scraper/ragBot'),
