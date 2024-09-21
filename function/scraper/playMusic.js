@@ -13,8 +13,17 @@ async function playMusic(query) {
 
         const videoUrl = video.url;
 
+        // tambahkan options dengan User-Agent
+        const options = {
+          requestOptions: {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+          }
+        };
+
         // dapatkan informasi video dan format audio
-        const info = await ytdl.getInfo(videoUrl);
+        const info = await ytdl.getInfo(videoUrl, options);
         const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
         const audioUrl = audioFormats[0].url; // ambil url audio yang playable
 
