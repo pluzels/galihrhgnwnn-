@@ -60,29 +60,6 @@ app.get("/api/ragbot", async (req, res) => {
   }
 });
 
-app.get('/api/playaudio', async (req, res) => {
-  try {
-    const { query } = req.query;
-    if (!query) {
-      return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
-    }
-
-    const audioData = await playaudio(query);
-
-    res.status(200).json({
-      status: 200,
-      creator: 'galihrhgnwn',
-      title: audioData.title,
-      channel: audioData.channel,
-      views: audioData.views,
-      downloadUrl: audioData.url, // Link download audio
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-
 // Endpoint untuk degreeGuru
 app.get("/api/degreeguru", async (req, res) => {
   try {
@@ -99,7 +76,7 @@ app.get("/api/degreeguru", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+};
 
 // Endpoint untuk smartContract
 app.get("/api/smartcontract", async (req, res) => {
