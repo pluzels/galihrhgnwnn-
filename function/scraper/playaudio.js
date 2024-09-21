@@ -13,30 +13,32 @@ async function playaudio(query) {
 
         const videoUrl = video.url;
 
-        // Streaming audio
-        const options = {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
+        // Menggunakan ytdl-core untuk mendapatkan info audio
+        ytdl.getInfo(videoUrl).then(info => {
+          const formats = info.formats;
+          const audioFormats = formats.filter(format => format.mimeType && format.mimeType.includes('audio/webm')); // Filter audio format
+
+          if (!audioFormats.length) {
+            return reject(new Error('No audio formats found'));
           }
-        };
 
-        const audioStream = ytdl(videoUrl, options);
+          const bestAudio = audioFormats[0]; // Ambil format audio terbaik
 
-        const result = {
-          title: video.title,
-          thumb: video.thumbnail,
-          channel: video.author.name,
-          published: video.ago,
-          views: video.views,
-          streamUrl: audioStream // Stream audio langsung
-        };
+          const result = {
+            title: video.title,
+            thumb: video.thumbnail,
+            channel: video.author.name,
+            published: video.ago,
+            views: video.views,
+            url: bestAudio.url // URL audio yang bisa digunakan untuk mendownload
+          };
 
-        resolve(result);
-      }).catch(reject);
+          resolve(result);
+        }).catch(reject); // Tangani kesalahan saat mengambil info dengan ytdl-core
+      }).catch(reject); // Tangani kesalahan saat pencarian dengan yt-search
     } catch (error) {
-      reject(error);
+      reject(error); // Tangani kesalahan lainnya
     }
   });
 }
-
-module.exports = playaudio; // Ekspor fungsi playaudio
+module.exports = playaudio;
