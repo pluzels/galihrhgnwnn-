@@ -13,11 +13,11 @@ async function playMusic(query) {
 
         const videoUrl = video.url;
 
-        // tambahkan options dengan User-Agent
+        // tambahkan options dengan User-Agent yang kamu berikan
         const options = {
           requestOptions: {
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+              'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
             }
           }
         };
