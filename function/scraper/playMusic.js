@@ -10,15 +10,23 @@ async function playMusic(query) {
         return reject(new Error('lagu tidak ditemukan.'));
       }
 
-      // Ambil URL audio stream dari play-dl
-      const videoInfo = await playdl.video_info(video.url);
-      const audioFormat = playdl.chooseFormat(videoInfo.formats, { quality: 'highestaudio' });
+      // Ambil informasi video dari play-dl
+      const videoInfo = await playdl.video_basic_info(video.url);
+
+      // Pilih format audio (biasanya dengan mimeType audio/mp4 atau audio/webm)
+      const audioFormat = videoInfo.formats.find(
+        format => format.mimeType.includes('audio/')
+      );
+
+      if (!audioFormat) {
+        return reject(new Error('Format audio tidak tersedia.'));
+      }
 
       const result = {
         id: video.videoId,
         title: video.title,
         thumbnail: video.thumbnail,
-        audio: audioFormat.url, // Link langsung ke file audio yang bisa di-play
+        audio: audioFormat.url, // Link langsung ke file audio
       };
 
       resolve(result);
