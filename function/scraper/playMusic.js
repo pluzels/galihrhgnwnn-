@@ -1,44 +1,28 @@
 const yts = require('yt-search');
-const ytdl = require('@distube/ytdl-core');
+const playdl = require('play-dl');
 
 async function playMusic(query) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
-      // cari video menggunakan yt-search
-      yts(query).then(async (data) => {
-        const video = data.videos[0]; // ambil video pertama dari hasil pencarian
-        if (!video) {
-          return reject(new Error('lagu tidak ditemukan.'));
-        }
+      const data = await yts(query);
+      const video = data.videos[0];
+      if (!video) {
+        return reject(new Error('lagu tidak ditemukan.'));
+      }
 
-        const videoUrl = video.url;
+      const audioStream = await playdl.stream(video.url);
 
-        // tambahkan options dengan User-Agent yang kamu berikan, dan nonaktifkan chunk download
-        const options = {
-          dlChunkSize: 0, // mencegah pembuatan file sementara
-          requestOptions: {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
-            }
-          }
-        };
+      const result = {
+        title: video.title,
+        thumb: video.thumbnail,
+        channel: video.author.name,
+        published: video.ago,
+        views: video.views,
+        streamUrl: audioStream.stream, // Stream audio
+        type: audioStream.type // 'opus' atau 'mp3'
+      };
 
-        // dapatkan informasi video dan format audio
-        const info = await ytdl.getInfo(videoUrl, options);
-        const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-        const audioUrl = audioFormats[0].url; // ambil url audio yang playable
-
-        const result = {
-          title: video.title,
-          thumb: video.thumbnail,
-          channel: video.author.name,
-          published: video.ago,
-          views: video.views,
-          streamUrl: audioUrl // kembalikan url audio langsung yang playable
-        };
-
-        resolve(result);
-      }).catch(reject);
+      resolve(result);
     } catch (error) {
       reject(error);
     }
