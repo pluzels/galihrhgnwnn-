@@ -58,6 +58,59 @@ app.get('/api/ragbot', async (req, res) => {
   }
 });
 
+app.get('/api/stream', async (req, res) => {
+  try {
+    const videoId = req.query.videoId;
+    if (!videoId) {
+      return res.status(400).json({ error: 'videoId tidak ditemukan.' });
+    }
+
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const audioStream = await playdl.stream(videoUrl);
+
+    res.set({
+      'Content-Type': 'audio/webm',
+      'Transfer-Encoding': 'chunked'
+    });
+
+    audioStream.stream.pipe(res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/playmusic', async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) {
+      return res.status(400).json({ error: 'query tidak ditemukan.' });
+    }
+
+    const data = await yts(query);
+    const video = data.videos[0];
+
+    if (!video) {
+      return res.status(404).json({ error: 'lagu tidak ditemukan.' });
+    }
+
+    const stream = await playdl.stream(video.url);
+
+    // kirim respons JSON dengan informasi audio dan endpoint stream
+    res.json({
+      status: 200,
+      creator: 'galihrhgnwn',
+      data: {
+        id: video.videoId,
+        title: video.title,
+        thumbnail: video.thumbnail,
+        audio: `/api/stream?videoId=${video.videoId}` // URL stream
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Endpoint untuk degreeGuru
 app.get('/api/degreeguru', async (req, res) => {
   try {
