@@ -1,7 +1,7 @@
 const yts = require('yt-search');
-const ytdlp = require('yt-dlp-exec');
+const yt = require('ytdl-core');
 
-async function playMusic(query) {
+async function playmusic(query) {
   return new Promise(async (resolve, reject) => {
     try {
       const data = await yts(query);
@@ -10,27 +10,22 @@ async function playMusic(query) {
         return reject(new Error('Lagu tidak ditemukan.'));
       }
 
-      // Dapatkan stream audio dari video menggunakan yt-dlp-exec
-      const result = await ytdlp(video.url, {
-        format: 'bestaudio/best',
-        extract_audio: true,
-        no_warnings: true,
-      });
+      // Menggunakan ytdl-core untuk mendapatkan link stream audio
+      const info = await yt.getInfo(video.url);
+      const format = yt.chooseFormat(info.formats, { quality: 'highestaudio' });
 
-      const streamUrl = result.url; // Link stream langsung
-
-      const response = {
+      const result = {
         id: video.videoId,
         title: video.title,
         thumbnail: video.thumbnail,
-        audio: streamUrl,
+        audio: format.url, // Link stream langsung
       };
 
-      resolve(response);
+      resolve(result);
     } catch (error) {
       reject(error);
     }
   });
 }
 
-module.exports = playMusic;
+module.exports = playmusic;
