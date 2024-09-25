@@ -70,7 +70,19 @@ const playMusic = async (input) => {
       body: downloadParams,
     });
 
-    const downloadData = await downloadResponse.json();
+    let downloadData;
+
+    // Pastikan response tidak null atau kosong
+    try {
+      downloadData = await downloadResponse.json();
+    } catch (error) {
+      throw new Error('Gagal memproses respons download, data tidak valid atau null.');
+    }
+
+    // Pastikan properti downloadUrlX tersedia
+    if (!downloadData || !downloadData.downloadUrlX) {
+      throw new Error('URL download tidak ditemukan atau tidak tersedia.');
+    }
 
     // Mengembalikan informasi lengkap tentang video dan URL untuk mendownload
     return {
@@ -89,7 +101,7 @@ const playMusic = async (input) => {
       },
     };
   } catch (error) {
-    console.error('Terjadi kesalahan:', error);
+    console.error('Terjadi kesalahan:', error.message);
     throw error;
   }
 };
