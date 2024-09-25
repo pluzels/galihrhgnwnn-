@@ -1,6 +1,6 @@
 const yts = require('yt-search');
 const fetch = require('node-fetch');
-const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper');
+const ytdl = require('ytdl-core');
 
 const playMusic = async (input) => {
   try {
@@ -13,28 +13,26 @@ const playMusic = async (input) => {
     let isSearch = false;
 
     if (input.startsWith('https://www.youtube.com/') || input.startsWith('https://youtu.be/')) {
-      try {
-        videoInfo = await youtubedl(input);
-      } catch (error) {
-        videoInfo = await youtubedlv2(input);
-      }
-      searchResult = await yts({ videoId: videoInfo.id });
+      videoInfo = await ytdl.getInfo(input);
+      searchResult = await yts({ videoId: videoInfo.videoDetails.videoId });
     } else {
       const searchResults = await yts(input);
       if (!searchResults.videos.length) {
         throw new Error('No videos found for the search query');
       }
       searchResult = searchResults.videos[0];
-      try {
-        videoInfo = await youtubedl(searchResult.url);
-      } catch (error) {
-        videoInfo = await youtubedlv2(searchResult.url);
-      }
+      videoInfo = await ytdl.getInfo(searchResult.url);
       isSearch = true;
     }
 
-    const audioURL = await videoInfo.audio['128kbps']?.download() || "-";
-    const videoURL = await videoInfo.video['360p']?.download() || "-";
+    // Mendapatkan URL audio dan video langsung dari ytdl-core
+    const audioFormats = ytdl.filterFormats(videoInfo.formats, 'audioonly');
+    const videoFormats = ytdl.filterFormats(videoInfo.formats, 'videoonly');
+
+    const audioURL = audioFormats.length ? audioFormats[0].url : "-";
+    const videoURL = videoFormats.length ? videoFormats[0].url : "-";
+
+    // Menggunakan tinyurl untuk memperpendek URL, jika diperlukan
     const shortAudioURL = audioURL !== "-" ? await (await fetch(`https://tinyurl.com/api-create.php?url=${audioURL}`)).text() : "-";
     const shortVideoURL = videoURL !== "-" ? await (await fetch(`https://tinyurl.com/api-create.php?url=${videoURL}`)).text() : "-";
 
@@ -43,16 +41,16 @@ const playMusic = async (input) => {
         channelUrl: searchResult.author.url || "-",
         views: searchResult.views || "-",
         category: "-",
-        id: videoInfo.id || searchResult.videoId || "-",
+        id: videoInfo.videoDetails.videoId || searchResult.videoId || "-",
         url: searchResult.url || "-",
         publicDate: searchResult.ago || "-",
         uploadDate: searchResult.ago || "-",
-        keywords: "-",
-        title: videoInfo.title || searchResult.title || "-",
+        keywords: videoInfo.videoDetails.keywords ? videoInfo.videoDetails.keywords.join(", ") : "-",
+        title: videoInfo.videoDetails.title || searchResult.title || "-",
         channel: searchResult.author.name || "-",
         seconds: searchResult.duration.seconds || "-",
-        description: searchResult.description || "-",
-        image: videoInfo.thumbnail || searchResult.thumbnail || "-",
+        description: videoInfo.videoDetails.shortDescription || searchResult.description || "-",
+        image: videoInfo.videoDetails.thumbnails[0].url || searchResult.thumbnail || "-",
         download: {
           audio: isSearch ? shortAudioURL : audioURL,
           video: isSearch ? shortVideoURL : videoURL,
@@ -64,4 +62,4 @@ const playMusic = async (input) => {
   }
 };
 
-module.exports = playMusic; // Ganti playmusic menjadi playMusic
+module.exports = playMusic;
