@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper-youtube');
-const yts = require('yt-search'); // Ini akan digunakan untuk pencarian video jika input bukan URL
+const ytdl = require('ytdl-core');
+const yts = require('yt-search');
 
 const playMusic = async (input) => {
   try {
@@ -16,31 +16,23 @@ const playMusic = async (input) => {
     const youtubeUrlRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
     if (youtubeUrlRegex.test(input)) {
       // Jika input adalah URL YouTube, proses URL tersebut
-      try {
-        videoInfo = await youtubedl(input);
-      } catch (error) {
-        videoInfo = await youtubedlv2(input);
-      }
+      videoInfo = await ytdl.getInfo(input);
     } else {
-      // Jika input bukan URL, coba lakukan pencarian
+      // Jika input bukan URL, lakukan pencarian dengan yt-search
       const searchResults = await yts(input);
       if (!searchResults.videos.length) {
         throw new Error('No videos found for the search query');
       }
       searchResult = searchResults.videos[0];
-      try {
-        videoInfo = await youtubedl(searchResult.url);
-      } catch (error) {
-        videoInfo = await youtubedlv2(searchResult.url);
-      }
+      videoInfo = await ytdl.getInfo(searchResult.url);
     }
 
     // Mendapatkan link download audio dan video
-    const audioStream = videoInfo.audio['128kbps']?.download();
-    const videoStream = videoInfo.video['360p']?.download();
+    const audioStream = ytdl.downloadFromInfo(videoInfo, { quality: 'highestaudio' });
+    const videoStream = ytdl.downloadFromInfo(videoInfo, { quality: 'lowestvideo' });
 
     // Menggunakan judul video untuk nama file, bersihkan nama dari karakter tidak valid
-    const fileNameBase = videoInfo.title.replace(/[^a-zA-Z0-9]/g, '_');
+    const fileNameBase = videoInfo.videoDetails.title.replace(/[^a-zA-Z0-9]/g, '_');
     const audioFileName = `${fileNameBase}.mp3`;
     const videoFileName = `${fileNameBase}.mp4`;
 
@@ -80,7 +72,7 @@ const playMusic = async (input) => {
     // Mengembalikan hasil dengan link download audio dan video
     return {
       resultado: {
-        title: videoInfo.title || "-",
+        title: videoInfo.videoDetails.title || "-",
         download: {
           audio: audioUrl,
           video: videoUrl,
