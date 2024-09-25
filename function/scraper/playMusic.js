@@ -1,67 +1,97 @@
 const yts = require('yt-search');
 const fetch = require('node-fetch');
-const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper');
+const axios = require('axios');
 
+// Fungsi utama untuk mencari video dan mendownloadnya
 const playMusic = async (input) => {
   try {
     if (!input) {
-      throw new Error('Input not specified');
+      throw new Error('Input tidak ditentukan');
     }
 
-    let videoInfo;
     let searchResult;
-    let isSearch = false;
 
+    // Jika input berupa URL, langsung ambil URL tersebut, jika tidak lakukan pencarian
     if (input.startsWith('https://www.youtube.com/') || input.startsWith('https://youtu.be/')) {
-      try {
-        videoInfo = await youtubedl(input);
-      } catch (error) {
-        videoInfo = await youtubedlv2(input);
-      }
-      searchResult = await yts({ videoId: videoInfo.id });
+      searchResult = await yts({ videoId: input.split('v=')[1] || input.split('youtu.be/')[1] });
     } else {
       const searchResults = await yts(input);
       if (!searchResults.videos.length) {
-        throw new Error('No videos found for the search query');
+        throw new Error('Tidak ada video yang ditemukan untuk kueri pencarian');
       }
-      searchResult = searchResults.videos[0];
-      try {
-        videoInfo = await youtubedl(searchResult.url);
-      } catch (error) {
-        videoInfo = await youtubedlv2(searchResult.url);
-      }
-      isSearch = true;
+      searchResult = searchResults.videos[0]; // Ambil video pertama dari hasil pencarian
     }
 
-    const audioURL = await videoInfo.audio['128kbps']?.download() || "-";
-    const videoURL = await videoInfo.video['360p']?.download() || "-";
-    const shortAudioURL = audioURL !== "-" ? await (await fetch(`https://tinyurl.com/api-create.php?url=${audioURL}`)).text() : "-";
-    const shortVideoURL = videoURL !== "-" ? await (await fetch(`https://tinyurl.com/api-create.php?url=${videoURL}`)).text() : "-";
+    // URL video YouTube yang ditemukan
+    const videoURL = searchResult.url || "-";
+    
+    // Menggunakan server dari tomp3.icu atau proxy.ezmp3.cc untuk mendownload video/audio
+    const serverResponse = await axios.post('https://proxy.ezmp3.cc/api/getServer', {}, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
+    const serverUrl = serverResponse.data.serverURL;
+    
+    // Melakukan konversi video menggunakan API convert
+    const convertResponse = await axios.post(`${serverUrl}/api/convert`, {
+      url: videoURL,
+      quality: 128,
+      trim: false,
+      startT: 0,
+      endT: 0,
+      videoLength: 0,
+      restricted: false,
+      code: 0,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const convertData = convertResponse.data;
+
+    // Jika proses konversi berhasil, kembalikan URL untuk mendownload file audio atau video
+    const downloadParams = `platform=youtube&url=${encodeURIComponent(videoURL)}&title=${convertData.title || 'video'}&id=YgEl3OEU2DA&ext=mp4&note=720p&format=136`;
+    const downloadHeaders = {
+      accept: 'application/json, text/javascript, */*; q=0.01',
+      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      Referer: 'https://ssyoutube.com.co/en111bv/',
+    };
+
+    // Mendapatkan URL download
+    const downloadResponse = await fetch('https://ssyoutube.com.co/mates/en/convert?id=YgEl3OEU2DA', {
+      method: 'POST',
+      headers: downloadHeaders,
+      body: downloadParams,
+    });
+
+    const downloadData = await downloadResponse.json();
+
+    // Mengembalikan informasi lengkap tentang video dan URL untuk mendownload
     return {
-      resultado: {
+      result: {
+        title: convertData.title || searchResult.title || "-",
+        videoUrl: videoURL,
+        mp3: convertData.url || 'MP3 URL tidak ditemukan',
+        mp4: downloadData.downloadUrlX || 'No download options found',
         channelUrl: searchResult.author.url || "-",
         views: searchResult.views || "-",
-        category: "-",
-        id: videoInfo.id || searchResult.videoId || "-",
-        url: searchResult.url || "-",
+        id: searchResult.videoId || "-",
         publicDate: searchResult.ago || "-",
-        uploadDate: searchResult.ago || "-",
-        keywords: "-",
-        title: videoInfo.title || searchResult.title || "-",
-        channel: searchResult.author.name || "-",
-        seconds: searchResult.duration.seconds || "-",
+        duration: searchResult.duration.timestamp || "-",
         description: searchResult.description || "-",
-        image: videoInfo.thumbnail || searchResult.thumbnail || "-",
-        download: {
-          audio: isSearch ? shortAudioURL : audioURL,
-          video: isSearch ? shortVideoURL : videoURL,
-        },
+        image: searchResult.thumbnail || "-",
       },
     };
   } catch (error) {
+    console.error('Terjadi kesalahan:', error);
     throw error;
   }
 };
 
-module.exports = playMusic; // Ganti playmusic menjadi playMusic
+module.exports = playMusic;
