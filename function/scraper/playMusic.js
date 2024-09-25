@@ -2,7 +2,7 @@ const yts = require('yt-search');
 const fetch = require('node-fetch');
 const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper');
 
-const ytplay = async (input) => {
+const playmusic = async (input) => {
   try {
     if (!input) {
       throw new Error('Input not specified');
@@ -64,4 +64,4 @@ const ytplay = async (input) => {
   }
 };
 
-module.exports = { ytplay };
+module.exports = { playmusic };
