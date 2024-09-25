@@ -1,7 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const ytdl = require('ytdl-core');
 const yts = require('yt-search');
+const fetch = require('node-fetch');
+const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper');
 
 const playMusic = async (input) => {
   try {
@@ -11,71 +10,52 @@ const playMusic = async (input) => {
 
     let videoInfo;
     let searchResult;
+    let isSearch = false;
 
-    // Memeriksa apakah input adalah URL YouTube
-    const youtubeUrlRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
-    if (youtubeUrlRegex.test(input)) {
-      // Jika input adalah URL YouTube, proses URL tersebut
-      videoInfo = await ytdl.getInfo(input);
+    if (input.startsWith('https://www.youtube.com/') || input.startsWith('https://youtu.be/')) {
+      try {
+        videoInfo = await youtubedl(input);
+      } catch (error) {
+        videoInfo = await youtubedlv2(input);
+      }
+      searchResult = await yts({ videoId: videoInfo.id });
     } else {
-      // Jika input bukan URL, lakukan pencarian dengan yt-search
       const searchResults = await yts(input);
       if (!searchResults.videos.length) {
         throw new Error('No videos found for the search query');
       }
       searchResult = searchResults.videos[0];
-      videoInfo = await ytdl.getInfo(searchResult.url);
+      try {
+        videoInfo = await youtubedl(searchResult.url);
+      } catch (error) {
+        videoInfo = await youtubedlv2(searchResult.url);
+      }
+      isSearch = true;
     }
 
-    // Mendapatkan link download audio dan video
-    const audioStream = ytdl.downloadFromInfo(videoInfo, { quality: 'highestaudio' });
-    const videoStream = ytdl.downloadFromInfo(videoInfo, { quality: 'lowestvideo' });
+    const audioURL = await videoInfo.audio['128kbps']?.download() || "-";
+    const videoURL = await videoInfo.video['360p']?.download() || "-";
+    const shortAudioURL = audioURL !== "-" ? await (await fetch(`https://tinyurl.com/api-create.php?url=${audioURL}`)).text() : "-";
+    const shortVideoURL = videoURL !== "-" ? await (await fetch(`https://tinyurl.com/api-create.php?url=${videoURL}`)).text() : "-";
 
-    // Menggunakan judul video untuk nama file, bersihkan nama dari karakter tidak valid
-    const fileNameBase = videoInfo.videoDetails.title.replace(/[^a-zA-Z0-9]/g, '_');
-    const audioFileName = `${fileNameBase}.mp3`;
-    const videoFileName = `${fileNameBase}.mp4`;
-
-    const audioFilePath = path.join(__dirname, 'downloads', audioFileName);
-    const videoFilePath = path.join(__dirname, 'downloads', videoFileName);
-
-    // Download dan simpan audio ke file lokal
-    await new Promise((resolve, reject) => {
-      const audioWriteStream = fs.createWriteStream(audioFilePath);
-      audioStream.pipe(audioWriteStream);
-      audioStream.on('end', resolve);
-      audioStream.on('error', reject);
-    });
-
-    // Download dan simpan video ke file lokal
-    await new Promise((resolve, reject) => {
-      const videoWriteStream = fs.createWriteStream(videoFilePath);
-      videoStream.pipe(videoWriteStream);
-      videoStream.on('end', resolve);
-      videoStream.on('error', reject);
-    });
-
-    // Buat URL atau path untuk akses file
-    const audioUrl = `http://localhost/downloads/${audioFileName}`;
-    const videoUrl = `http://localhost/downloads/${videoFileName}`;
-
-    // Setelah file didownload dan dijadikan link, atur mekanisme untuk menghapus file setelah diakses
-    setTimeout(() => {
-      fs.unlink(audioFilePath, (err) => {
-        if (err) console.error('Error deleting audio file:', err);
-      });
-      fs.unlink(videoFilePath, (err) => {
-        if (err) console.error('Error deleting video file:', err);
-      });
-    }, 60000); // File akan dihapus setelah 60 detik
-
-    // Mengembalikan hasil dengan link download audio dan video
     return {
       resultado: {
-        title: videoInfo.videoDetails.title || "-",
+        channelUrl: searchResult.author.url || "-",
+        views: searchResult.views || "-",
+        category: "-",
+        id: videoInfo.id || searchResult.videoId || "-",
+        url: searchResult.url || "-",
+        publicDate: searchResult.ago || "-",
+        uploadDate: searchResult.ago || "-",
+        keywords: "-",
+        title: videoInfo.title || searchResult.title || "-",
+        channel: searchResult.author.name || "-",
+        seconds: searchResult.duration.seconds || "-",
+        description: searchResult.description || "-",
+        image: videoInfo.thumbnail || searchResult.thumbnail || "-",
         download: {
-          audio: audioUrl,
-          video: videoUrl,
+          audio: isSearch ? shortAudioURL : audioURL,
+          video: isSearch ? shortVideoURL : videoURL,
         },
       },
     };
@@ -84,4 +64,4 @@ const playMusic = async (input) => {
   }
 };
 
-module.exports = playMusic;
+module.exports = playMusic; // Ganti playmusic menjadi playMusic
