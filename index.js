@@ -104,7 +104,7 @@ app.get("/api/playmusic", async (req, res) => {
       return res.status(400).json({ error: 'Parameter "query" tidak ditemukan' });
     }
 
-    const result = await ptz.ytplay(query); // Panggil fungsi ytplay melalui ptz
+    const result = await ptz.playmusic(query); // Memanggil fungsi playmusic dari ptz
     res.status(200).json({
       status: 200,
       creator: "galihrhgnwn",
