@@ -97,7 +97,7 @@ app.get('/api/ytsearch', async (req, res) => {
 });
 
 // Endpoint untuk playMusic
-app.get("/api/playmusic", async (req, res) => {
+app.get("/api/playMusic", async (req, res) => {
   try {
     const { query } = req.query;
     if (!query) {
