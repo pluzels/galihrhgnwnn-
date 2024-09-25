@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper-youtube');
+const yts = require('yt-search'); // Ini akan digunakan untuk pencarian video jika input bukan URL
 
 const playMusic = async (input) => {
   try {
@@ -9,21 +10,35 @@ const playMusic = async (input) => {
     }
 
     let videoInfo;
-    if (input.startsWith('https://www.youtube.com/') || input.startsWith('https://youtu.be/')) {
-      // Jika input adalah URL YouTube
+    let searchResult;
+
+    // Memeriksa apakah input adalah URL YouTube
+    const youtubeUrlRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+    if (youtubeUrlRegex.test(input)) {
+      // Jika input adalah URL YouTube, proses URL tersebut
       try {
         videoInfo = await youtubedl(input);
       } catch (error) {
         videoInfo = await youtubedlv2(input);
       }
     } else {
-      throw new Error('Invalid URL');
+      // Jika input bukan URL, coba lakukan pencarian
+      const searchResults = await yts(input);
+      if (!searchResults.videos.length) {
+        throw new Error('No videos found for the search query');
+      }
+      searchResult = searchResults.videos[0];
+      try {
+        videoInfo = await youtubedl(searchResult.url);
+      } catch (error) {
+        videoInfo = await youtubedlv2(searchResult.url);
+      }
     }
 
     // Mendapatkan link download audio dan video
     const audioStream = videoInfo.audio['128kbps']?.download();
     const videoStream = videoInfo.video['360p']?.download();
-    
+
     // Menggunakan judul video untuk nama file, bersihkan nama dari karakter tidak valid
     const fileNameBase = videoInfo.title.replace(/[^a-zA-Z0-9]/g, '_');
     const audioFileName = `${fileNameBase}.mp3`;
