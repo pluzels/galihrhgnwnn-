@@ -64,4 +64,4 @@ const playMusic = async (input) => {
   }
 };
 
-module.exports = { playMusic }; // Ganti playmusic menjadi playMusic
+module.exports = playMusic; // Ganti playmusic menjadi playMusic
