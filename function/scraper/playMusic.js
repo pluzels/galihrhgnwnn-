@@ -2,7 +2,7 @@ const yts = require('yt-search');
 const fetch = require('node-fetch');
 const { youtubedl, youtubedlv2 } = require('@bochilteam/scraper');
 
-const playmusic = async (input) => {
+const playMusic = async (input) => {
   try {
     if (!input) {
       throw new Error('Input not specified');
@@ -64,4 +64,4 @@ const playmusic = async (input) => {
   }
 };
 
-module.exports = { playmusic };
+module.exports = { playMusic }; // Ganti playmusic menjadi playMusic
