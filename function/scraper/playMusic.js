@@ -82,8 +82,8 @@ const playMusic = async (input) => {
     const videoData = await ytmp44(videoURL);
 
     return {
-      audio: audioData.result || 'Error mengambil audio',
-      video: videoData.result || 'Error mengambil video',
+      audio: audioData.status ? audioData.result : null,
+      video: videoData.status ? videoData.result : null,
     };
   } catch (error) {
     console.error('Terjadi kesalahan:', error.message);
