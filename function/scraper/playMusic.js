@@ -1,70 +1,33 @@
 const yts = require('yt-search');
-const axios = require('axios');
-const cheerio = require('cheerio');
+const { yta, ytv } = require('@bochilteam/scraper-youtube'); // Import fungsi yta untuk audio dan ytv untuk video
 
-// Fungsi untuk mengonversi video ke mp3
+// Fungsi untuk mengonversi video ke mp3 menggunakan @bochilteam/scraper-youtube
 const ytmp33 = async (url) => {
-  const parameters = {
-    url: url,
-    format: 'mp3',
-    lang: 'en',
-  };
-
   try {
-    const conversionResponse = await axios.post('https://s64.notube.net/recover_weight.php', parameters, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-    if (!conversionResponse.data.token) {
-      throw new Error('No token received.');
-    }
-    const token = conversionResponse.data.token;
-    const downloadPageResponse = await axios.get(`https://notube.net/en/download?token=${token}`);
-
-    if (downloadPageResponse.status !== 200) {
-      throw new Error('Failed to retrieve download page.');
-    }
-
-    const $ = cheerio.load(downloadPageResponse.data);
-    const result = {
-      title: $('#breadcrumbs-section h2').text(),
-      download: $('#breadcrumbs-section #downloadButton').attr('href'),
+    const { title, dl_link } = await yta(url); // Mengambil link download audio
+    return {
+      status: true,
+      result: {
+        title,
+        download: dl_link
+      }
     };
-
-    return { status: true, result };
   } catch (error) {
     return { status: false, error: error.message };
   }
 };
 
-// Fungsi untuk mengonversi video ke mp4
+// Fungsi untuk mengonversi video ke mp4 menggunakan @bochilteam/scraper-youtube
 const ytmp44 = async (url) => {
-  const parameters = {
-    url: url,
-    format: 'mp4',
-    lang: 'en',
-  };
-
   try {
-    const conversionResponse = await axios.post('https://s64.notube.net/recover_weight.php', parameters, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-    if (!conversionResponse.data.token) {
-      throw new Error('No token received.');
-    }
-    const token = conversionResponse.data.token;
-    const downloadPageResponse = await axios.get(`https://notube.net/en/download?token=${token}`);
-
-    if (downloadPageResponse.status !== 200) {
-      throw new Error('Failed to retrieve download page.');
-    }
-
-    const $ = cheerio.load(downloadPageResponse.data);
-    const result = {
-      title: $('#breadcrumbs-section h2').text(),
-      download: $('#breadcrumbs-section #downloadButton').attr('href'),
+    const { title, dl_link } = await ytv(url); // Mengambil link download video
+    return {
+      status: true,
+      result: {
+        title,
+        download: dl_link
+      }
     };
-
-    return { status: true, result };
   } catch (error) {
     return { status: false, error: error.message };
   }
@@ -80,7 +43,7 @@ const playMusic = async (input) => {
     const searchResult = searchResults.videos[0]; // Ambil video pertama
     const videoURL = searchResult.url;
 
-    // Ambil data audio dan video
+    // Ambil data audio dan video menggunakan scraper-youtube
     const audioData = await ytmp33(videoURL);
     const videoData = await ytmp44(videoURL);
 
