@@ -1,23 +1,24 @@
 const yts = require('yt-search');
 const axios = require('axios');
-const querystring = require('querystring');
 const cheerio = require('cheerio');
 
 // Fungsi untuk mengonversi video ke mp3
 const ytmp33 = async (url) => {
   const parameters = {
-    'url': url,
-    'format': 'mp3',
-    'lang': 'en'
+    url: url,
+    format: 'mp3',
+    lang: 'en',
   };
 
   try {
-    const conversionResponse = await axios.post('https://s64.notube.net/recover_weight.php', querystring.stringify(parameters));
+    const conversionResponse = await axios.post('https://s64.notube.net/recover_weight.php', parameters, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
     if (!conversionResponse.data.token) {
       throw new Error('No token received.');
     }
     const token = conversionResponse.data.token;
-    const downloadPageResponse = await axios.get('https://notube.net/en/download?token=' + token);
+    const downloadPageResponse = await axios.get(`https://notube.net/en/download?token=${token}`);
 
     if (downloadPageResponse.status !== 200) {
       throw new Error('Failed to retrieve download page.');
@@ -25,8 +26,8 @@ const ytmp33 = async (url) => {
 
     const $ = cheerio.load(downloadPageResponse.data);
     const result = {
-      'title': $('#breadcrumbs-section h2').text(),
-      'download': $('#breadcrumbs-section #downloadButton').attr('href')
+      title: $('#breadcrumbs-section h2').text(),
+      download: $('#breadcrumbs-section #downloadButton').attr('href'),
     };
 
     return { status: true, result };
@@ -38,18 +39,20 @@ const ytmp33 = async (url) => {
 // Fungsi untuk mengonversi video ke mp4
 const ytmp44 = async (url) => {
   const parameters = {
-    'url': url,
-    'format': 'mp4',
-    'lang': 'en'
+    url: url,
+    format: 'mp4',
+    lang: 'en',
   };
 
   try {
-    const conversionResponse = await axios.post('https://s64.notube.net/recover_weight.php', querystring.stringify(parameters));
+    const conversionResponse = await axios.post('https://s64.notube.net/recover_weight.php', parameters, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
     if (!conversionResponse.data.token) {
       throw new Error('No token received.');
     }
     const token = conversionResponse.data.token;
-    const downloadPageResponse = await axios.get('https://notube.net/en/download?token=' + token);
+    const downloadPageResponse = await axios.get(`https://notube.net/en/download?token=${token}`);
 
     if (downloadPageResponse.status !== 200) {
       throw new Error('Failed to retrieve download page.');
@@ -57,8 +60,8 @@ const ytmp44 = async (url) => {
 
     const $ = cheerio.load(downloadPageResponse.data);
     const result = {
-      'title': $('#breadcrumbs-section h2').text(),
-      'download': $('#breadcrumbs-section #downloadButton').attr('href')
+      title: $('#breadcrumbs-section h2').text(),
+      download: $('#breadcrumbs-section #downloadButton').attr('href'),
     };
 
     return { status: true, result };
