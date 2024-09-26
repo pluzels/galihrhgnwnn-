@@ -16,15 +16,15 @@ const playMusic = async (input) => {
     const audioData = await ytmp3v2(videoURL);
     const videoData = await ytmp4(videoURL);
 
-    // Kembalikan hasil sesuai format dari ruhend-scraper
+    // Kembalikan hasil dengan link download langsung
     return {
       ytmp3v2: {
         title: audioData.title || searchResult.title,
-        audio: audioData.audio,
+        audio: audioData.link || audioData.audio, // Pastikan link mengarah ke file audio
       },
       ytmp4: {
         title: videoData.title || searchResult.title,
-        video: videoData.video,
+        video: videoData.link || videoData.video, // Pastikan link mengarah ke file video
         quality: videoData.quality,
         thumbnail: videoData.thumbnail,
         size: videoData.size,
