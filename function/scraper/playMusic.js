@@ -1,46 +1,34 @@
 const yts = require('yt-search');
-const ruhend = require('ruhend-scraper');
+const { ytmp3v2, ytmp4 } = require('ruhend-scraper');
 
-// Fungsi utama untuk mencari video dan mendownloadnya
+// Fungsi untuk mencari video dan mengambil data audio & video
 const playMusic = async (input) => {
   try {
-    if (!input) {
-      throw new Error('Input tidak ditentukan');
+    // Cari video di YouTube
+    const searchResults = await yts(input);
+    if (!searchResults.videos.length) {
+      throw new Error('Tidak ada video yang ditemukan');
     }
+    const searchResult = searchResults.videos[0]; // Ambil video pertama dari hasil pencarian
+    const videoURL = searchResult.url;
 
-    let searchResult;
+    // Ambil data audio dan video menggunakan ruhend-scraper
+    const audioData = await ytmp3v2(videoURL);
+    const videoData = await ytmp4(videoURL);
 
-    if (input.startsWith('https://www.youtube.com/') || input.startsWith('https://youtu.be/')) {
-      searchResult = await yts({ videoId: input.split('v=')[1] || input.split('youtu.be/')[1] });
-    } else {
-      const searchResults = await yts(input);
-      if (!searchResults.videos.length) {
-        throw new Error('Tidak ada video yang ditemukan');
-      }
-      searchResult = searchResults.videos[0];
-    }
-
-    const videoURL = searchResult.url || "-";
-    const mediaData = await ruhend.ytmp3(videoURL);
-
-    if (!mediaData || !mediaData.url) {
-      throw new Error('URL download tidak ditemukan.');
-    }
-
+    // Kembalikan hasil sesuai format dari ruhend-scraper
     return {
-      result: {
-        title: searchResult.title || "-",
-        videoUrl: videoURL,
-        mp3: mediaData.url || 'MP3 URL tidak ditemukan',
-        mp4: mediaData.mp4 || 'MP4 URL tidak ditemukan',
-        channelUrl: searchResult.author.url || "-",
-        views: searchResult.views || "-",
-        id: searchResult.videoId || "-",
-        publicDate: searchResult.ago || "-",
-        duration: searchResult.duration.timestamp || "-",
-        description: searchResult.description || "-",
-        image: searchResult.thumbnail || "-",
+      ytmp3v2: {
+        title: audioData.title || searchResult.title,
+        audio: audioData.audio,
       },
+      ytmp4: {
+        title: videoData.title || searchResult.title,
+        video: videoData.video,
+        quality: videoData.quality,
+        thumbnail: videoData.thumbnail,
+        size: videoData.size,
+      }
     };
   } catch (error) {
     console.error('Terjadi kesalahan:', error.message);
