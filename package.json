@@ -15,6 +15,7 @@
     "fs": "0.0.1-security",
     "ytdl-core": "4.11.5",
     "path": "^0.12.7",
+    "ruhend-scraper": "^8.0.0",
     "node-fetch": "2.6.6",
     "@bochilteam/scraper-youtube": "^5.0.0",
     "ytdl-core": "github:khlevon/node-ytdl-core#v4.11.4-patch.2",
