@@ -1,55 +1,34 @@
 const yts = require('yt-search');
-const { yta, ytv } = require('@bochilteam/scraper-youtube'); // Import fungsi yta untuk audio dan ytv untuk video
+const { ytmp3v2, ytmp4 } = require('ruhend-scraper');
 
-// Fungsi untuk mengonversi video ke mp3 menggunakan @bochilteam/scraper-youtube
-const ytmp33 = async (url) => {
-  try {
-    const { title, dl_link } = await yta(url); // Mengambil link download audio
-    return {
-      status: true,
-      result: {
-        title,
-        download: dl_link
-      }
-    };
-  } catch (error) {
-    return { status: false, error: error.message };
-  }
-};
-
-// Fungsi untuk mengonversi video ke mp4 menggunakan @bochilteam/scraper-youtube
-const ytmp44 = async (url) => {
-  try {
-    const { title, dl_link } = await ytv(url); // Mengambil link download video
-    return {
-      status: true,
-      result: {
-        title,
-        download: dl_link
-      }
-    };
-  } catch (error) {
-    return { status: false, error: error.message };
-  }
-};
-
-// Fungsi utama untuk mencari video dan mendownload audio/video
+// Fungsi untuk mencari video dan mengambil data audio & video
 const playMusic = async (input) => {
   try {
+    // Cari video di YouTube
     const searchResults = await yts(input);
     if (!searchResults.videos.length) {
       throw new Error('Tidak ada video yang ditemukan');
     }
-    const searchResult = searchResults.videos[0]; // Ambil video pertama
+    const searchResult = searchResults.videos[0]; // Ambil video pertama dari hasil pencarian
     const videoURL = searchResult.url;
 
-    // Ambil data audio dan video menggunakan scraper-youtube
-    const audioData = await ytmp33(videoURL);
-    const videoData = await ytmp44(videoURL);
+    // Ambil data audio dan video menggunakan ruhend-scraper
+    const audioData = await ytmp3v2(videoURL);
+    const videoData = await ytmp4(videoURL);
 
+    // Kembalikan hasil sesuai format dari ruhend-scraper
     return {
-      audio: audioData.status ? audioData.result : null,
-      video: videoData.status ? videoData.result : null,
+      ytmp3v2: {
+        title: audioData.title || searchResult.title,
+        audio: audioData.audio,
+      },
+      ytmp4: {
+        title: videoData.title || searchResult.title,
+        video: videoData.video,
+        quality: videoData.quality,
+        thumbnail: videoData.thumbnail,
+        size: videoData.size,
+      }
     };
   } catch (error) {
     console.error('Terjadi kesalahan:', error.message);
